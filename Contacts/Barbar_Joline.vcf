@@ -1,0 +1,18 @@
+BEGIN:VCARD
+VERSION:3.0
+PRODID:-//Apple Inc.//iPhone OS 14.4//EN
+N:Barbar;Joline;;;
+FN:Joline Barbar
+ORG:Liberty Investment Ltd;
+EMAIL;type=INTERNET;type=WORK;type=pref:joline@liberty-investment.com
+TEL;type=CELL;type=VOICE;type=pref:+231 7775 55567
+TEL;type=CELL;type=VOICE:+961 70 760 600
+item1.ADR;type=WORK;type=pref:;;Red Hill\nVirginia;Monrovia;;;Liberia
+item1.X-ABADR:lr
+item2.URL;type=pref:facebook.com/drinkaqualife
+item2.X-ABLabel:Facebook
+item3.URL:instagram.com/drinkaqualife
+item3.X-ABLabel:Instagram
+item4.URL:www.drinkaqualife.com
+item4.X-ABLabel:_$!<HomePage>!$_
+END:VCARD
