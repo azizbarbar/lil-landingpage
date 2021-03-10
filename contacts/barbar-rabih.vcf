@@ -1,14 +1,14 @@
 BEGIN:VCARD
 VERSION:3.0
 PRODID:-//Apple Inc.//iPhone OS 14.4//EN
-N:Barbar;Joline;;;
-FN:Joline Barbar
+N:Barbar;Rabih;;;
+FN:Rabih Barbar
 ORG:Liberty Investment Ltd;
-TITLE:Chief Financial Officer
-EMAIL;type=INTERNET;type=WORK;type=pref:joline@liberty-investment.com
-TEL;type=CELL;type=VOICE;type=pref:+231 7775 55567
-TEL;type=CELL;type=VOICE:+961 70 760 600
-item1.ADR;type=WORK;type=pref:;;Red Hill\nVirginia;Monrovia;;;Liberia
+TITLE:Chief Operating Officer
+EMAIL;type=INTERNET;type=WORK;type=pref:rabih@liberty-investment.com
+TEL;type=CELL;type=VOICE;type=pref:+231 7766 66666
+TEL;type=CELL;type=VOICE:+231 8865 85065
+item1.ADR;type=HOME;type=pref:;;Red Hill\nVirginia;Monrovia;Montserrado;;Liberia
 item1.X-ABADR:lr
 item2.URL;type=pref:https://drinkaqualife.com/
 item2.X-ABLabel:_$!<HomePage>!$_
