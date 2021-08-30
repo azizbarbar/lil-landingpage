@@ -1,0 +1,16 @@
+BEGIN:VCARD
+VERSION:3.0
+PRODID:-//Apple Inc.//iPhone OS 14.4.2//EN
+N:Kenneh;Sekou;L;;
+FN:Sekou L Kenneh
+ORG:Liberty Investment Ltd;
+TITLE:Human Resources Manager
+EMAIL;type=INTERNET;type=WORK;type=pref:sekou@liberty-investment.com
+TEL;type=OTHER;type=VOICE;type=pref:+231 7781 99004
+TEL;type=OTHER;type=VOICE:+231 7784 66922
+TEL;type=CELL;type=VOICE:+231 7763 28034
+item1.ADR;type=HOME;type=pref:;;Red Hill Field;Virginia;;;Liberia
+item1.X-ABADR:lr
+item2.URL;type=pref:drinkaqualife.com
+item2.X-ABLabel:_$!<HomePage>!$_
+END:VCARD

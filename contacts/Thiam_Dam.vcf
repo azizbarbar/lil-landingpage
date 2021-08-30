@@ -1,0 +1,16 @@
+BEGIN:VCARD
+VERSION:3.0
+PRODID:-//Apple Inc.//iPhone OS 14.4.2//EN
+N:Thiam;Dam;;;
+FN:Dam Thiam
+ORG:Liberty Investment Ltd;
+TITLE:Metal Fabrication Manager
+EMAIL;type=INTERNET;type=HOME;type=pref:thiam@liberty-investment.com
+TEL;type=CELL;type=VOICE;type=pref:+231886529739
+TEL;type=OTHER;type=VOICE:+231 7702 97455
+TEL;type=OTHER;type=VOICE:+231 7704 27775
+item1.ADR;type=HOME;type=pref:;;Red Hill Field;Virginia;;;Liberia
+item1.X-ABADR:lr
+item2.URL;type=pref:drinkaqualife.com
+item2.X-ABLabel:_$!<HomePage>!$_
+END:VCARD
