@@ -338,7 +338,7 @@ function loadData() {
 
     const dB = b2 - b1;
     const eB = dB / (timeDiffHours * lineSpeed) * 100;
-    const eBT = dB / (timeTotal * lineSpeed) * 100;
+    const eBT = b2 / (timeTotal * lineSpeed) * 100;
     const dP = p2 - p1;
     const eP = dP !== 0 ? ((dP - dB) / dP) * 100 : 0;
     const dS = s2 - s1;
