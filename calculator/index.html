@@ -6,7 +6,6 @@
   <title>Production Calculator with Downtime</title>
   <link rel="icon" type="image/png" href="../Resources/LIL_Icon-01.png" />
   <style>
-    /* Style from index.html for a consistent look */
     body {
       font-family: Arial, sans-serif;
       max-width: 600px;
@@ -48,7 +47,6 @@
       border: 1px solid #ccc;
       box-sizing: border-box;
     }
-    /* Styling for auto-generated and readonly fields */
     input[placeholder="Start Count (Generated)"],
     #t1, #t2 {
       color: #888;
@@ -60,12 +58,12 @@
       font-size: 16px;
       border-radius: 5px;
       border: 1px solid #ccc;
-      height: 120px; /* Original height */
+      height: 120px;
       box-sizing: border-box;
       margin-top: 20px;
       resize: none;
     }
-    button {
+    button, input[type="text"] {
       width: 100%;
       padding: 12px;
       font-size: 16px;
@@ -74,6 +72,7 @@
       border-radius: 5px;
       cursor: pointer;
       margin-top: 10px;
+      box-sizing: border-box;
     }
     button.calculate-btn {
       background-color: #215578;
@@ -82,13 +81,19 @@
     button.copy-btn {
       background-color: #215578;
       color: white;
-      margin-bottom: 20px;
+      margin-bottom: 0;
     }
     button.reset-btn {
       background-color: #991c1f;
       color: white;
     }
-    /* Style for downtime history */
+    /* The EBT display is a readonly text box */
+    #ebtDisplay {
+      display: none;
+      font-weight: normal;
+      cursor: default;
+      margin-top: 10px;
+    }
     .history {
       max-height: 150px;
       overflow-y: auto;
@@ -114,7 +119,7 @@
       h2 {
         font-size: 18px;
       }
-      button {
+      button, input[type="text"] {
         font-size: 14px;
       }
       #resultBox {
@@ -128,7 +133,7 @@
   <img src="../Resources/LIL_AlphaLogo.png" alt="Grafton Logo" class="logo" />
   <h2>Production Calculator with Downtime Tracking</h2>
 
-  <!-- New Production Line Dropdown -->
+  <!-- Production Line and Format Selection -->
   <div class="form-group">
     <label for="productionLine">Production Line</label>
     <select id="productionLine" onchange="updateFormatOptions()">
@@ -136,30 +141,28 @@
       <option value="CSD">CSD</option>
     </select>
   </div>
-
-  <!-- Format Dropdown (Options will be populated dynamically) -->
   <div class="form-group">
     <label for="format">Format</label>
     <select id="format" onchange="setLineSpeedAndPackSize()">
-      <!-- Options added via JavaScript -->
+      <!-- Options will be populated dynamically -->
     </select>
   </div>
 
+  <!-- Time Inputs -->
   <div class="form-group">
     <label for="productionStart">Production Start Time</label>
     <input type="datetime-local" id="productionStart" />
   </div>
-
   <div class="form-group">
-    <label for="startDateTime">Initial Time</label>
+    <label for="t1">Initial Time</label>
     <input type="datetime-local" id="t1" />
   </div>
   <div class="form-group">
-    <label for="endDateTime">Current Time</label>
+    <label for="t2">Current Time</label>
     <input type="datetime-local" id="t2" />
   </div>
 
-  <!-- Downtime section from downtime.html added here -->
+  <!-- Downtime Section -->
   <div class="downtime-container">
     <button id="startDowntime" class="main-button">Start Downtime</button>
     <div class="time-inputs">
@@ -179,41 +182,53 @@
     </div>
   </div>
 
-  <!-- Bottles, Preforms, and Packs -->
+  <!-- Counters for Bottles, Preforms, and Packs -->
   <div class="form-group">
-    <label for="bottles">Bottles</label>
+    <label for="b1">Bottles</label>
     <input type="tel" id="b1" placeholder="Start Count (Generated)" value="0" oninput="formatNumberInput(this)" />
     <input type="tel" id="b2" placeholder="End Count" oninput="formatNumberInput(this); updateEndTime()" />
   </div>
   <div class="form-group">
-    <label for="preforms">Preforms</label>
+    <label for="p1">Preforms</label>
     <input type="tel" id="p1" placeholder="Start Count (Generated)" value="0" oninput="formatNumberInput(this)" />
     <input type="tel" id="p2" placeholder="End Count" oninput="formatNumberInput(this)" />
   </div>
   <div class="form-group">
-    <label for="packs">Packs</label>
+    <label for="s1">Packs</label>
     <input type="tel" id="s1" placeholder="Start Count (Generated)" value="0" oninput="formatNumberInput(this)" />
     <input type="tel" id="s2" placeholder="End Count" oninput="formatNumberInput(this)" />
   </div>
 
-  <!-- Calculate and Result Display -->
+  <!-- Calculation and Result Display -->
   <button class="calculate-btn" onclick="validateAndCalculate()">Calculate</button>
   <textarea id="resultBox" readonly></textarea>
   <button class="copy-btn" onclick="copyResult()">Copy Result</button>
+  <!-- New EBT display text box -->
+  <input type="text" id="ebtDisplay" readonly />
   <button class="reset-btn" onclick="endProductionAndCalculate()">End Production and Reset</button>
 
-  <!-- JavaScript functionality -->
   <script>
-    let lineSpeed = 45000; // Default line speed
-    let packSize = 12; // Default pack size
+    // Helper function to format a Date into a local datetime string (YYYY-MM-DDTHH:MM)
+    const formatDateTimeLocal = (date = new Date()) => {
+      const pad = num => num < 10 ? "0" + num : num;
+      return date.getFullYear() + "-" +
+             pad(date.getMonth() + 1) + "-" +
+             pad(date.getDate()) + "T" +
+             pad(date.getHours()) + ":" +
+             pad(date.getMinutes());
+    };
 
-    // Populate Format dropdown based on Production Line selection
+    let lineSpeed = 45000; // Default line speed
+    let packSize = 12;     // Default pack size
+
+    // Populate Format dropdown based on Production Line selection.
+    // It now reads the saved "format" from localStorage and selects it if available.
     function updateFormatOptions() {
       const productionLine = document.getElementById("productionLine").value;
       const formatSelect = document.getElementById("format");
-      formatSelect.innerHTML = ""; // Clear existing options
-
+      formatSelect.innerHTML = "";
       let options = [];
+
       if (productionLine === "Aqualife") {
         options = [
           "Aqualife 500ml by 12",
@@ -235,85 +250,61 @@
           "CSD 200ml by 30"
         ];
       }
+      const savedFormat = localStorage.getItem("format");
       options.forEach((optionText, index) => {
-      let option = document.createElement("option");
-      option.value = optionText;
-      // Remove the production line prefix from the displayed text
-      option.text = optionText.replace(productionLine + " ", "");
-      if (index === 0) option.selected = true;
-      formatSelect.add(option);
-    });
-    setLineSpeedAndPackSize(); // Update based on new selection
-    saveData();
+        const option = document.createElement("option");
+        option.value = optionText;
+        option.text = optionText.replace(productionLine + " ", "");
+        if (savedFormat && optionText === savedFormat) {
+          option.selected = true;
+        } else if (!savedFormat && index === 0) {
+          option.selected = true;
+        }
+        formatSelect.add(option);
+      });
+      setLineSpeedAndPackSize();
+      saveData();
     }
 
+    // Set line speed and pack size based on selected format.
     function setLineSpeedAndPackSize() {
       const format = document.getElementById("format").value;
       switch (format) {
         case "Aqualife 500ml by 12":
-          lineSpeed = 45000;
-          packSize = 12;
-          break;
+          lineSpeed = 45000; packSize = 12; break;
         case "Aqualife 500ml by 15":
-          lineSpeed = 45000;
-          packSize = 15;
-          break;
+          lineSpeed = 45000; packSize = 15; break;
         case "Aqualife 500ml by 16":
-          lineSpeed = 45000;
-          packSize = 16;
-          break;
+          lineSpeed = 45000; packSize = 16; break;
         case "Aqualife 500ml by 24":
-          lineSpeed = 45000;
-          packSize = 24;
-          break;
+          lineSpeed = 45000; packSize = 24; break;
         case "Aqualife 330ml by 15":
-          lineSpeed = 45000;
-          packSize = 15;
-          break;
+          lineSpeed = 45000; packSize = 15; break;
         case "Aqualife 1500ml by 6":
-          lineSpeed = 24000;
-          packSize = 6;
-          break;
+          lineSpeed = 24000; packSize = 6; break;
         case "CSD 350ml by 12":
-          lineSpeed = 24000;
-          packSize = 12;
-          break;
+          lineSpeed = 24000; packSize = 12; break;
         case "CSD 350ml by 15":
-          lineSpeed = 24000;
-          packSize = 15;
-          break;
+          lineSpeed = 24000; packSize = 15; break;
         case "CSD 350ml by 16":
-          lineSpeed = 24000;
-          packSize = 16;
-          break;
+          lineSpeed = 24000; packSize = 16; break;
         case "CSD 500ml by 12":
-          lineSpeed = 24000;
-          packSize = 12;
-          break;
+          lineSpeed = 24000; packSize = 12; break;
         case "CSD 500ml by 15":
-          lineSpeed = 24000;
-          packSize = 15;
-          break;
+          lineSpeed = 24000; packSize = 15; break;
         case "CSD 200ml by 12":
-          lineSpeed = 24000;
-          packSize = 12;
-          break;
+          lineSpeed = 24000; packSize = 12; break;
         case "CSD 200ml by 24":
-          lineSpeed = 24000;
-          packSize = 24;
-          break;
+          lineSpeed = 24000; packSize = 24; break;
         case "CSD 200ml by 30":
-          lineSpeed = 24000;
-          packSize = 30;
-          break;
+          lineSpeed = 24000; packSize = 30; break;
         default:
-          lineSpeed = 45000;
-          packSize = 12;
+          lineSpeed = 45000; packSize = 12;
       }
       saveData();
     }
 
-    // Save data to localStorage
+    // Save current values (including resultBox content) to localStorage.
     function saveData() {
       localStorage.setItem("productionLine", document.getElementById("productionLine").value);
       localStorage.setItem("format", document.getElementById("format").value);
@@ -326,8 +317,10 @@
       localStorage.setItem("b2", document.getElementById("b2").value);
       localStorage.setItem("p2", document.getElementById("p2").value);
       localStorage.setItem("s2", document.getElementById("s2").value);
+      localStorage.setItem("resultBox", document.getElementById("resultBox").value);
     }
 
+    // Load saved values from localStorage and, if production is locked, disable fields.
     function loadData() {
       document.getElementById("productionLine").value = localStorage.getItem("productionLine") || "Aqualife";
       document.getElementById("productionStart").value = localStorage.getItem("productionStart") || "";
@@ -339,17 +332,34 @@
       document.getElementById("b2").value = localStorage.getItem("b2") || "";
       document.getElementById("p2").value = localStorage.getItem("p2") || "";
       document.getElementById("s2").value = localStorage.getItem("s2") || "";
+      // Restore the result box text.
+      document.getElementById("resultBox").value = localStorage.getItem("resultBox") || "";
       updateFormatOptions();
+
+      if(localStorage.getItem("locked") === "true") {
+        document.getElementById("productionLine").disabled = true;
+        document.getElementById("format").disabled = true;
+        document.getElementById("productionStart").disabled = true;
+        const savedEbt = localStorage.getItem("ebtDisplay");
+        if(savedEbt) {
+          document.getElementById("ebtDisplay").value = savedEbt;
+        }
+        document.getElementById("ebtDisplay").style.display = "block";
+      } else {
+        document.getElementById("productionLine").disabled = false;
+        document.getElementById("format").disabled = false;
+        document.getElementById("productionStart").disabled = false;
+        document.getElementById("ebtDisplay").style.display = "none";
+      }
     }
 
-    // Add event listeners to save on input change
-    document.querySelectorAll("input").forEach((input) => {
+    // Save on every input change.
+    document.querySelectorAll("input").forEach(input => {
       input.addEventListener("input", saveData);
     });
-
-    // Call loadData when the page loads
     window.addEventListener("load", loadData);
 
+    // When production start time is set, also set the initial time if empty.
     document.getElementById("productionStart").addEventListener("change", () => {
       const startTime = document.getElementById("productionStart").value;
       if (!document.getElementById("t1").value) {
@@ -357,11 +367,13 @@
       }
     });
 
+    // Update current time using local time.
     function updateEndTime() {
-      const now = new Date();
-      document.getElementById("t2").value = now.toISOString().slice(0, 16);
+      document.getElementById("t2").value = formatDateTimeLocal();
+      saveData();
     }
 
+    // Format number inputs with commas.
     function formatNumberInput(input) {
       let value = input.value.replace(/,/g, "");
       if (!isNaN(value) && value !== "") {
@@ -371,11 +383,13 @@
       }
     }
 
+    // Parse formatted numbers.
     function parseNumber(inputId) {
       const value = document.getElementById(inputId).value.replace(/,/g, "");
       return parseInt(value) || 0;
     }
 
+    // Validate input fields before calculation.
     function validateAndCalculate() {
       if (!document.getElementById("b2").value || !document.getElementById("p2").value || !document.getElementById("s2").value) {
         alert("Please fill in all end count fields for bottles, preforms, and packs before calculating.");
@@ -384,6 +398,7 @@
       calculate();
     }
 
+    // Main calculation logic.
     function calculate() {
       const t1 = new Date(document.getElementById("t1").value);
       const t2 = new Date(document.getElementById("t2").value);
@@ -406,6 +421,20 @@
       const dS = s2 - s1;
       const eS = (dS / (timeDiffHours * (lineSpeed / packSize))) * 100;
 
+      // Lock the production fields if not already locked.
+      if(localStorage.getItem("locked") !== "true") {
+        localStorage.setItem("locked", "true");
+        document.getElementById("productionLine").disabled = true;
+        document.getElementById("format").disabled = true;
+        document.getElementById("productionStart").disabled = true;
+        document.getElementById("ebtDisplay").style.display = "block";
+      }
+      // Update the EBT display text box.
+      const prodStart = new Date(document.getElementById("productionStart").value);
+      const ebtText = `${eBT.toFixed(2)}% Efficiency (from ${prodStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} to ${t2.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`;
+      document.getElementById("ebtDisplay").value = ebtText;
+      localStorage.setItem("ebtDisplay", ebtText);
+
       const resultText = `From *${t1.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} To ${t2.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}*  
 (${timeDiffHours.toFixed(2)} Hours)
 
@@ -424,37 +453,34 @@ ${s2.toLocaleString()} Total Packs
 
 *${eBT.toFixed(2)}%* Overall Efficiency 
 
-*Downtime:*
-
-`;
+*Downtime:*`;
 
       const entries = JSON.parse(localStorage.getItem("downtimeEntries")) || [];
-      const textOutput = entries.map((entry) => entry.text).join("\n");
+      const textOutput = entries.map(entry => entry.text).join("\n");
 
-      document.getElementById("resultBox").value = resultText + textOutput;
+      document.getElementById("resultBox").value = resultText + "\n" + textOutput;
+      localStorage.setItem("resultBox", document.getElementById("resultBox").value);
 
-      // Move current values to initial fields
+      // Update initial values for the next calculation.
       document.getElementById("t1").value = document.getElementById("t2").value;
       document.getElementById("b1").value = b2.toLocaleString();
       document.getElementById("p1").value = p2.toLocaleString();
       document.getElementById("s1").value = s2.toLocaleString();
-
-      // Clear end fields
       document.getElementById("b2").value = "";
       document.getElementById("p2").value = "";
       document.getElementById("s2").value = "";
-
-      downtimeLog.innerHTML = "";
+      document.getElementById("downtimeLog").innerHTML = "";
       localStorage.removeItem("downtimeEntries");
       localStorage.removeItem("downtimeState");
-
-      // Save updated initial values to localStorage
       saveData();
     }
 
+    // Production summary and reset function.
     function endProductionAndCalculate() {
       const t1 = new Date(document.getElementById("productionStart").value);
-      const t2 = new Date();
+      let t2Val = document.getElementById("t2").value;
+      if (!t2Val) { t2Val = document.getElementById("t1").value; }
+      const t2 = new Date(t2Val);
       const timeDiffHours = (t2 - t1) / (1000 * 60 * 60);
 
       const b1 = parseNumber("b1");
@@ -484,21 +510,30 @@ ${(p1 - b1).toLocaleString()} (${eP.toFixed(2)}%) Preforms Lost
 ${bS.toLocaleString()} (${bP.toFixed(2)}%) Bottles Lost`;
 
       document.getElementById("resultBox").value = resultText;
+      localStorage.setItem("resultBox", resultText);
       copyResult();
       alert(resultText);
+      // Clear lock and re-enable production fields before resetting.
+      localStorage.removeItem("locked");
+      document.getElementById("productionLine").disabled = false;
+      document.getElementById("format").disabled = false;
+      document.getElementById("productionStart").disabled = false;
+      document.getElementById("ebtDisplay").style.display = "none";
       resetForm();
     }
 
+    // Copy result to clipboard.
     function copyResult() {
       const resultBox = document.getElementById("resultBox");
       resultBox.select();
-      resultBox.setSelectionRange(0, 99999); // For mobile devices
+      resultBox.setSelectionRange(0, 99999);
       document.execCommand("copy");
       alert("Result copied to clipboard!");
     }
 
+    // Reset form and localStorage.
     function resetForm() {
-      localStorage.clear(); // Clear all saved data in localStorage
+      localStorage.clear();
       document.getElementById("productionStart").value = "";
       document.getElementById("t1").value = "";
       document.getElementById("t2").value = "";
@@ -511,6 +546,7 @@ ${bS.toLocaleString()} (${bP.toFixed(2)}%) Bottles Lost`;
       document.getElementById("resultBox").value = "";
     }
 
+    // Downtime functionality.
     document.addEventListener("DOMContentLoaded", () => {
       const startDowntimeBtn = document.getElementById("startDowntime");
       const downtimeStartInput = document.getElementById("downtimeStart");
@@ -523,11 +559,9 @@ ${bS.toLocaleString()} (${bP.toFixed(2)}%) Bottles Lost`;
 
       const loadState = () => {
         const savedState = JSON.parse(localStorage.getItem("downtimeState")) || {};
-
         if (savedState.downtimeStart) downtimeStartInput.value = savedState.downtimeStart;
         if (savedState.downtimeEnd) downtimeEndInput.value = savedState.downtimeEnd;
         if (savedState.reason) reasonInput.value = savedState.reason;
-
         if (savedState.isActive && savedState.startTimestamp) {
           startTimestamp = new Date(savedState.startTimestamp);
           startDowntimeBtn.classList.add("active");
@@ -542,7 +576,7 @@ ${bS.toLocaleString()} (${bP.toFixed(2)}%) Bottles Lost`;
           downtimeEnd: downtimeEndInput.value,
           reason: reasonInput.value,
           isActive: startDowntimeBtn.classList.contains("active"),
-          startTimestamp: startTimestamp ? startTimestamp.toISOString() : null,
+          startTimestamp: startTimestamp ? startTimestamp : null,
         };
         localStorage.setItem("downtimeState", JSON.stringify(state));
       };
@@ -556,19 +590,15 @@ ${bS.toLocaleString()} (${bP.toFixed(2)}%) Bottles Lost`;
         }, 1000);
       };
 
-      const stopTimer = () => {
-        clearInterval(timerInterval);
-      };
+      const stopTimer = () => clearInterval(timerInterval);
 
       const appendEntry = (entry) => {
         const div = document.createElement("div");
         div.className = "downtime-entry";
         div.setAttribute("data-id", entry.id);
-
         const text = document.createElement("span");
         text.className = "text";
         text.innerText = entry.text;
-
         const deleteBtn = document.createElement("span");
         deleteBtn.className = "delete";
         deleteBtn.innerText = "X";
@@ -578,7 +608,6 @@ ${bS.toLocaleString()} (${bP.toFixed(2)}%) Bottles Lost`;
             saveDownTimeData();
           }
         };
-
         div.appendChild(text);
         div.appendChild(deleteBtn);
         downtimeLog.appendChild(div);
@@ -587,15 +616,14 @@ ${bS.toLocaleString()} (${bP.toFixed(2)}%) Bottles Lost`;
       startDowntimeBtn.addEventListener("click", () => {
         if (startDowntimeBtn.classList.contains("active")) {
           stopTimer();
-          downtimeEndInput.value = new Date().toISOString().slice(0, -8);
+          downtimeEndInput.value = formatDateTimeLocal();
           startDowntimeBtn.classList.remove("active");
           startDowntimeBtn.innerText = "Start Downtime";
         } else {
-          const now = new Date();
-          downtimeStartInput.value = now.toISOString().slice(0, -8);
+          downtimeStartInput.value = formatDateTimeLocal();
           downtimeEndInput.value = "";
           reasonInput.value = "";
-          startTimestamp = now;
+          startTimestamp = new Date();
           startDowntimeBtn.classList.add("active");
           startDowntimeBtn.innerText = "0:00 - Click to Stop";
           startTimer();
@@ -615,7 +643,6 @@ ${bS.toLocaleString()} (${bP.toFixed(2)}%) Bottles Lost`;
           };
           appendEntry(entry);
           saveDownTimeData();
-
           downtimeStartInput.value = "";
           downtimeEndInput.value = "";
           reasonInput.value = "";
